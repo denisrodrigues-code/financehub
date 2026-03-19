@@ -71,6 +71,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend", policy =>
+    {
+        var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"];
+        if (string.IsNullOrWhiteSpace(allowedOrigins))
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            return;
+        }
+
+        var origins = allowedOrigins
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+    });
+});
 builder.Services.AddHttpClient("banks-directory", httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://brasilapi.com.br");
@@ -93,6 +110,7 @@ if (!app.Environment.IsEnvironment("Testing"))
     await SeedDemoDataAsync(dbContext);
 }
 
+app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
