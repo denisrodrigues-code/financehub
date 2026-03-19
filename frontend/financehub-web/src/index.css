@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Manrope', sans-serif;
+  color: #dff2ff;
+  background:
+    radial-gradient(circle at 12% 8%, #072748 0%, #06142f 24%, #040714 68%, #03040d 100%),
+    linear-gradient(140deg, #041124 0%, #05091a 100%);
+  --panel-border: rgb(103 232 249 / 0.32);
+  --panel-bg: rgb(4 10 24 / 0.8);
+  --panel-shadow: 0 0 34px rgb(34 211 238 / 0.16), 0 0 52px rgb(124 58 237 / 0.12);
+  --title-color: #e8f8ff;
+  --subtitle-color: rgb(198 231 255 / 0.84);
+  --input-border: rgb(103 232 249 / 0.3);
+  --input-placeholder: rgb(190 226 250 / 0.84);
+  --input-focus-border: rgb(34 211 238 / 0.74);
+  --input-focus-ring: rgb(34 211 238 / 0.22);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --panel-border: rgb(103 232 249 / 0.38);
+    --panel-shadow: 0 0 42px rgb(34 211 238 / 0.2), 0 0 62px rgb(124 58 237 / 0.15);
+    --input-focus-border: rgb(34 211 238 / 0.85);
+    --input-focus-ring: rgb(34 211 238 / 0.28);
+  }
+
+  .app-button {
+    box-shadow: 0 0 28px rgb(34 211 238 / 0.35), 0 0 36px rgb(124 58 237 / 0.25);
+  }
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --panel-border: rgb(103 232 249 / 0.2);
+    --panel-shadow: 0 0 18px rgb(34 211 238 / 0.08), 0 0 24px rgb(124 58 237 / 0.06);
+    --input-focus-border: rgb(34 211 238 / 0.62);
+    --input-focus-ring: rgb(34 211 238 / 0.16);
+  }
+
+  .app-button {
+    box-shadow: 0 0 16px rgb(34 211 238 / 0.2), 0 0 20px rgb(124 58 237 / 0.15);
+  }
+}
+
+:root[data-contrast='high'] {
+  --panel-border: rgb(129 140 248 / 0.35);
+  --title-color: #f6f9ff;
+  --subtitle-color: rgb(228 236 255 / 0.95);
+  --input-border: rgb(165 180 252 / 0.36);
+  --input-placeholder: rgb(214 226 255 / 0.96);
+  --input-focus-border: rgb(103 232 249 / 0.7);
+  --input-focus-ring: rgb(34 211 238 / 0.24);
+}
+
+:root[data-effects='soft'] {
+  --panel-shadow: 0 0 14px rgb(34 211 238 / 0.05);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.app-panel {
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--panel-shadow);
+  border-radius: 18px;
+}
+
+.app-title {
+  color: var(--title-color);
+}
+
+.app-subtitle {
+  color: var(--subtitle-color);
+}
+
+.app-input,
+.app-select {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--input-border);
+  background: rgb(9 14 36 / 0.66);
+  color: #eaf0ff;
+  padding: 0.72rem 0.88rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-input::placeholder {
+  color: var(--input-placeholder);
+}
+
+.app-input:focus,
+.app-select:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
+}
+
+.app-button {
+  border-radius: 14px;
+  background: linear-gradient(90deg, #22d3ee 0%, #5b5ff0 60%, #7c3aed 100%);
+  color: #f8fbff;
+  font-weight: 600;
+  box-shadow: 0 0 22px rgb(34 211 238 / 0.28), 0 0 28px rgb(124 58 237 / 0.2);
+  transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+
+.app-button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.app-button:disabled {
+  opacity: 0.6;
+}
+
+.table-line {
+  border-color: rgb(129 140 248 / 0.18);
+}
