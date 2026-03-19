@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FinanceHub.Api/FinanceHub.Api.csproj" />
+    <Project Path="src/FinanceHub.Application/FinanceHub.Application.csproj" />
+    <Project Path="src/FinanceHub.Domain/FinanceHub.Domain.csproj" />
+    <Project Path="src/FinanceHub.Infrastructure/FinanceHub.Infrastructure.csproj" />
+    <Project Path="src/FinanceHub.Integrations/FinanceHub.Integrations.csproj" />
+    <Project Path="src/FinanceHub.Worker/FinanceHub.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FinanceHub.Api.Tests/FinanceHub.Api.Tests.csproj" />
+  </Folder>
+</Solution>
