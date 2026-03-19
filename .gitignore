@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+
+# .NET
+bin/
+obj/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# Local env
+.env

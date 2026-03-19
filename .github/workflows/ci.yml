@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'dotnet-tools.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore backend/FinanceHub.slnx
+
+      - name: Build
+        run: dotnet build backend/FinanceHub.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test backend/FinanceHub.slnx --configuration Release --no-build --logger "trx;LogFileName=backend-tests.trx" --results-directory backend/TestResults --collect:"XPlat Code Coverage"
+
+      - name: Upload Backend Test Results and Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/TestResults
+          if-no-files-found: warn
+
+      - name: Publish Backend API Artifact
+        run: dotnet publish backend/src/FinanceHub.Api/FinanceHub.Api.csproj --configuration Release --no-build -o backend/publish/api
+
+      - name: Upload Backend Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-publish
+          path: backend/publish/api
+          if-no-files-found: error
+
+  frontend:
+    name: Frontend Build, Test, Lint and Biome
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend/financehub-web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/financehub-web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Biome Check
+        run: npm run biome:check
+
+      - name: Test
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload Frontend Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/financehub-web/coverage
+          if-no-files-found: warn
+
+      - name: Upload Frontend Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/financehub-web/dist
+          if-no-files-found: error
