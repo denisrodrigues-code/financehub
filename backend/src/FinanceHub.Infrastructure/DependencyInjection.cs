@@ -5,6 +5,7 @@ using FinanceHub.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace FinanceHub.Infrastructure;
 
@@ -14,8 +15,9 @@ public static class DependencyInjection
     {
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
 
-        var connectionString = configuration.GetConnectionString("Postgres")
+        var rawConnectionString = configuration.GetConnectionString("Postgres")
             ?? "Host=localhost;Port=5432;Database=financehub;Username=postgres;Password=postgres";
+        var connectionString = NormalizePostgresConnectionString(rawConnectionString);
 
         services.AddDbContext<FinanceHubDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -26,5 +28,29 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
+    }
+
+    private static string NormalizePostgresConnectionString(string value)
+    {
+        if (value.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(value);
+            var userInfo = uri.UserInfo.Split(':', 2);
+
+            var builder = new NpgsqlConnectionStringBuilder
+            {
+                Host = uri.Host,
+                Port = uri.Port <= 0 ? 5432 : uri.Port,
+                Database = uri.AbsolutePath.Trim('/'),
+                Username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : string.Empty,
+                Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+                SslMode = SslMode.Require
+            };
+
+            return builder.ConnectionString;
+        }
+
+        return value;
     }
 }
