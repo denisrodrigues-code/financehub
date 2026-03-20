@@ -47,6 +47,16 @@ builder.Services.AddOpenTelemetry()
         .AddConsoleExporter());
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+if (!builder.Environment.IsDevelopment())
+{
+    if (string.IsNullOrWhiteSpace(jwtOptions.SecretKey) ||
+        jwtOptions.SecretKey.Contains("change-me", StringComparison.OrdinalIgnoreCase) ||
+        jwtOptions.SecretKey.Length < 32)
+    {
+        throw new InvalidOperationException("Jwt:SecretKey must be securely configured in non-development environments.");
+    }
+}
+
 var signingKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtOptions.SecretKey));
 
 var port = Environment.GetEnvironmentVariable("PORT");
@@ -78,8 +88,13 @@ builder.Services.AddCors(options =>
         var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"];
         if (string.IsNullOrWhiteSpace(allowedOrigins))
         {
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-            return;
+            if (builder.Environment.IsDevelopment())
+            {
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                return;
+            }
+
+            throw new InvalidOperationException("Cors:AllowedOrigins must be configured outside Development environment.");
         }
 
         var origins = allowedOrigins
@@ -108,6 +123,15 @@ if (!app.Environment.IsEnvironment("Testing"))
     await dbContext.Database.EnsureCreatedAsync();
     await EnsureSchemaPatchesAsync(dbContext);
     await SeedDemoDataAsync(dbContext);
+
+    var seedEnabled = app.Environment.IsDevelopment() ||
+        (builder.Configuration.GetValue<bool?>("Seed:Enabled") ?? false);
+
+    if (seedEnabled)
+    {
+        await EnsureDefaultExpenseCategoriesAsync(dbContext);
+        await EnsureHistoricalRandomTransactionsAsync(dbContext);
+    }
 }
 
 app.UseCors("frontend");
@@ -148,11 +172,8 @@ auth.MapPost("/register", async (
     user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
     dbContext.Users.Add(user);
-    dbContext.Categories.AddRange(
-        new Category { UserId = user.Id, Name = "Moradia", Type = "Expense", Color = "#EF4444" },
-        new Category { UserId = user.Id, Name = "Alimentacao", Type = "Expense", Color = "#F59E0B" },
-        new Category { UserId = user.Id, Name = "Salario", Type = "Income", Color = "#22C55E" }
-    );
+    dbContext.Categories.AddRange(BuildDefaultExpenseCategories(user.Id));
+    dbContext.Categories.Add(new Category { UserId = user.Id, Name = "Salario", Type = "Income", Color = "#22C55E" });
 
     var token = tokenService.Generate(user);
     user.RefreshToken = token.RefreshToken;
@@ -1020,12 +1041,7 @@ static async Task SeedDemoDataAsync(FinanceHubDbContext dbContext)
     var hasher = new PasswordHasher<User>();
     user.PasswordHash = hasher.HashPassword(user, "FinanceHub@123");
 
-    var expenseCategories = new[]
-    {
-        new Category { UserId = user.Id, Name = "Moradia", Type = "Expense", Color = "#EF4444" },
-        new Category { UserId = user.Id, Name = "Alimentacao", Type = "Expense", Color = "#F59E0B" },
-        new Category { UserId = user.Id, Name = "Transporte", Type = "Expense", Color = "#6366F1" },
-    };
+    var expenseCategories = BuildDefaultExpenseCategories(user.Id).ToArray();
     var incomeCategory = new Category { UserId = user.Id, Name = "Salario", Type = "Income", Color = "#22C55E" };
 
     var institution = await dbContext.Institutions.OrderBy(x => x.Name).FirstAsync();
@@ -1112,11 +1128,213 @@ static async Task SeedDemoDataAsync(FinanceHubDbContext dbContext)
     await dbContext.SaveChangesAsync();
 }
 
+static IEnumerable<Category> BuildDefaultExpenseCategories(Guid userId)
+{
+    return new[]
+    {
+        new Category { UserId = userId, Name = "Moradia", Type = "Expense", Color = "#EF4444" },
+        new Category { UserId = userId, Name = "Alimentacao", Type = "Expense", Color = "#F59E0B" },
+        new Category { UserId = userId, Name = "Transporte", Type = "Expense", Color = "#6366F1" },
+        new Category { UserId = userId, Name = "Saude", Type = "Expense", Color = "#EC4899" },
+        new Category { UserId = userId, Name = "Educacao", Type = "Expense", Color = "#14B8A6" },
+        new Category { UserId = userId, Name = "Lazer", Type = "Expense", Color = "#8B5CF6" },
+        new Category { UserId = userId, Name = "Compras", Type = "Expense", Color = "#F97316" },
+        new Category { UserId = userId, Name = "Assinaturas", Type = "Expense", Color = "#0EA5E9" },
+        new Category { UserId = userId, Name = "Viagem", Type = "Expense", Color = "#22C55E" },
+        new Category { UserId = userId, Name = "Impostos", Type = "Expense", Color = "#DC2626" }
+    };
+}
+
+static async Task EnsureDefaultExpenseCategoriesAsync(FinanceHubDbContext dbContext)
+{
+    var users = await dbContext.Users
+        .AsNoTracking()
+        .Select(x => x.Id)
+        .ToListAsync();
+
+    if (users.Count == 0)
+    {
+        return;
+    }
+
+    var existingExpenseCategories = await dbContext.Categories
+        .AsNoTracking()
+        .Where(x => x.Type == "Expense")
+        .Select(x => new { x.UserId, x.Name })
+        .ToListAsync();
+
+    var existingByUser = existingExpenseCategories
+        .GroupBy(x => x.UserId)
+        .ToDictionary(
+            x => x.Key,
+            x => x.Select(item => item.Name).ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+    var categoriesToAdd = new List<Category>();
+
+    foreach (var userId in users)
+    {
+        existingByUser.TryGetValue(userId, out var existingNames);
+        existingNames ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var category in BuildDefaultExpenseCategories(userId))
+        {
+            if (!existingNames.Contains(category.Name))
+            {
+                categoriesToAdd.Add(category);
+            }
+        }
+    }
+
+    if (categoriesToAdd.Count == 0)
+    {
+        return;
+    }
+
+    dbContext.Categories.AddRange(categoriesToAdd);
+    await dbContext.SaveChangesAsync();
+}
+
 static async Task EnsureSchemaPatchesAsync(FinanceHubDbContext dbContext)
 {
     await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE \"Accounts\" ADD COLUMN IF NOT EXISTS \"BankName\" character varying(120);");
     await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE \"Accounts\" ADD COLUMN IF NOT EXISTS \"BankCode\" character varying(10);");
     await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE \"Accounts\" ADD COLUMN IF NOT EXISTS \"BankIspb\" character varying(20);");
+}
+
+static async Task EnsureHistoricalRandomTransactionsAsync(FinanceHubDbContext dbContext)
+{
+    var rng = new Random();
+    var now = DateTime.UtcNow;
+    const int monthsBack = 10;
+
+    var users = await dbContext.Users
+        .AsNoTracking()
+        .Select(x => x.Id)
+        .ToListAsync();
+
+    if (users.Count == 0)
+    {
+        return;
+    }
+
+    var expenseLabels = new[]
+    {
+        "[Seed] Compra mercado",
+        "[Seed] Farmacia",
+        "[Seed] Streaming",
+        "[Seed] Combustivel",
+        "[Seed] Restaurante",
+        "[Seed] Padaria",
+        "[Seed] Academia",
+        "[Seed] Energia",
+        "[Seed] Internet",
+        "[Seed] Uber"
+    };
+
+    var incomeLabels = new[]
+    {
+        "[Seed] Salario",
+        "[Seed] Freela",
+        "[Seed] Cashback",
+        "[Seed] Reembolso",
+        "[Seed] Bonus"
+    };
+
+    foreach (var userId in users)
+    {
+        var accounts = await dbContext.Accounts
+            .Where(x => x.UserId == userId)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        if (accounts.Count == 0)
+        {
+            continue;
+        }
+
+        var expenseCategories = await dbContext.Categories
+            .Where(x => x.UserId == userId && x.Type == "Expense")
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        var incomeCategories = await dbContext.Categories
+            .Where(x => x.UserId == userId && x.Type == "Income")
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        if (expenseCategories.Count == 0 || incomeCategories.Count == 0)
+        {
+            continue;
+        }
+
+        for (var i = 1; i <= monthsBack; i++)
+        {
+            var monthDate = now.AddMonths(-i);
+            var periodStart = new DateTime(monthDate.Year, monthDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var periodEnd = periodStart.AddMonths(1).AddSeconds(-1);
+
+            var monthAlreadySeeded = await dbContext.Transactions.AnyAsync(x =>
+                x.Account.UserId == userId &&
+                x.Description.StartsWith("[Seed]") &&
+                x.PostedAt >= periodStart &&
+                x.PostedAt <= periodEnd);
+
+            if (monthAlreadySeeded)
+            {
+                continue;
+            }
+
+            var expenseCount = rng.Next(16, 32);
+            var incomeCount = rng.Next(2, 5);
+            var daysInMonth = DateTime.DaysInMonth(periodStart.Year, periodStart.Month);
+
+            for (var e = 0; e < expenseCount; e++)
+            {
+                var day = rng.Next(1, daysInMonth + 1);
+                var hour = rng.Next(8, 22);
+                var minute = rng.Next(0, 60);
+                var postedAt = new DateTime(periodStart.Year, periodStart.Month, day, hour, minute, 0, DateTimeKind.Utc);
+
+                var amount = Math.Round((decimal)rng.NextDouble() * 520m + 12m, 2);
+
+                dbContext.Transactions.Add(new Transaction
+                {
+                    AccountId = accounts[rng.Next(accounts.Count)],
+                    CategoryId = expenseCategories[rng.Next(expenseCategories.Count)],
+                    ExternalTransactionId = $"seed-exp-{Guid.NewGuid():N}",
+                    Description = expenseLabels[rng.Next(expenseLabels.Length)],
+                    Merchant = "Comercio Local",
+                    Amount = amount,
+                    Type = TransactionType.Expense,
+                    PostedAt = postedAt
+                });
+            }
+
+            for (var r = 0; r < incomeCount; r++)
+            {
+                var day = r == 0 ? 5 : rng.Next(10, 28);
+                var hour = rng.Next(9, 18);
+                var minute = rng.Next(0, 60);
+                var postedAt = new DateTime(periodStart.Year, periodStart.Month, day, hour, minute, 0, DateTimeKind.Utc);
+
+                var amount = Math.Round((decimal)rng.NextDouble() * 9000m + 1200m, 2);
+
+                dbContext.Transactions.Add(new Transaction
+                {
+                    AccountId = accounts[rng.Next(accounts.Count)],
+                    CategoryId = incomeCategories[rng.Next(incomeCategories.Count)],
+                    ExternalTransactionId = $"seed-inc-{Guid.NewGuid():N}",
+                    Description = incomeLabels[rng.Next(incomeLabels.Length)],
+                    Merchant = "Origem de renda",
+                    Amount = amount,
+                    Type = TransactionType.Income,
+                    PostedAt = postedAt
+                });
+            }
+        }
+    }
+
+    await dbContext.SaveChangesAsync();
 }
 
 public partial class Program;
