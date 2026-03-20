@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { MobileAppFrame } from '../components/layout/mobile-app-frame'
 import { api } from '../lib/api'
 import { PageLoader } from '../components/ui/page-loader'
 import { formatBrl } from '../utils/currency'
@@ -84,8 +85,8 @@ export function ReportsPage() {
 
   const hasCategories = categories.length > 0
 
-  return (
-    <div className="space-y-6">
+  const pageContent = (
+    <>
       <header>
         <h2 className="app-title text-2xl font-bold">Relatórios</h2>
         <p className="app-subtitle text-sm">Distribuição de gastos por categoria e análise de tendência.</p>
@@ -110,12 +111,12 @@ export function ReportsPage() {
         </select>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <article className="app-panel p-4">
-          <h3 className="mb-3 text-lg font-semibold text-slate-100">Gastos por categoria</h3>
+      <section className="grid gap-2.5 xl:grid-cols-2">
+        <article className="app-panel p-3 lg:p-2.5 xl:p-3.5">
+          <h3 className="text-primary-theme mb-3 text-lg font-semibold">Gastos por categoria</h3>
           <div className="h-72">
             {!hasCategories ? (
-              <div className="grid h-full place-items-center rounded-lg border border-indigo-300/20 bg-indigo-950/25 text-sm text-slate-300/85">
+              <div className="surface-soft text-secondary-theme grid h-full place-items-center rounded-lg text-sm">
                 Sem dados de categorias para exibir no período.
               </div>
             ) : null}
@@ -139,26 +140,36 @@ export function ReportsPage() {
           </div>
         </article>
 
-        <article className="app-panel p-4">
-          <h3 className="mb-3 text-lg font-semibold text-slate-100">Resumo de categorias</h3>
+        <article className="app-panel p-3 lg:p-2.5 xl:p-3.5">
+          <h3 className="text-primary-theme mb-3 text-lg font-semibold">Resumo de categorias</h3>
           <div className="space-y-2">
             {!hasCategories ? (
-              <div className="rounded-lg border border-indigo-300/20 bg-indigo-950/25 px-3 py-2 text-sm text-slate-300/85">
+              <div className="surface-soft text-secondary-theme rounded-lg px-3 py-2 text-sm">
                 Nenhuma categoria encontrada para o relatório.
               </div>
             ) : null}
             {categories.map((item, index) => (
-              <div key={item.category} className="table-line flex items-center justify-between rounded-lg border bg-indigo-950/25 px-3 py-2">
+              <div key={item.category} className="surface-inner table-line flex items-center justify-between rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                  <p className="text-sm font-medium text-slate-100">{item.category}</p>
+                  <p className="text-primary-theme text-sm font-medium">{item.category}</p>
                 </div>
-                <p className="text-sm font-semibold text-slate-100">{formatBrl(item.amount)}</p>
+                <p className="text-primary-theme text-sm font-semibold">{formatBrl(item.amount)}</p>
               </div>
             ))}
           </div>
         </article>
       </section>
+    </>
+  )
+
+  return (
+    <div className="flex h-full flex-col md:block">
+      <MobileAppFrame title="Relatórios">
+        <div className="space-y-3 [&>header]:hidden [&_.app-panel]:rounded-xl [&_.app-panel]:border [&_.app-panel]:p-3 [&_.table-line]:border [&_h3]:text-[15px] [&_h3]:font-semibold [&_label]:text-slate-200 [&_.app-input]:h-11 [&_.app-input]:rounded-xl [&_.app-select]:h-11 [&_.app-select]:rounded-xl">{pageContent}</div>
+      </MobileAppFrame>
+
+      <div className="hidden space-y-3 lg:space-y-2.5 md:block">{pageContent}</div>
     </div>
   )
 }

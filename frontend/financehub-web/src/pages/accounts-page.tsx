@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
+import { MobileAppFrame } from '../components/layout/mobile-app-frame'
 import { api } from '../lib/api'
 import { downloadCsv } from '../lib/csv'
 import { getApiErrorMessage } from '../lib/http-error'
@@ -154,16 +155,16 @@ export function AccountsPage() {
     toast.success('CSV de contas gerado com sucesso.')
   }
 
-  return (
-    <div className="space-y-6">
+  const pageContent = (
+    <>
       <header>
         <h2 className="app-title text-2xl font-bold">Contas e Conexões</h2>
         <p className="app-subtitle text-sm">Conecte bancos e cadastre contas para iniciar a consolidação.</p>
       </header>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="app-panel p-4">
-          <h3 className="mb-3 text-lg font-semibold text-slate-100">Nova conexão bancária</h3>
+        <div className="app-panel p-3 lg:p-2.5 xl:p-3.5">
+          <h3 className="text-primary-theme mb-3 text-lg font-semibold">Nova conexão bancária</h3>
           <select
             value={selectedBankForConnectionIspb}
             onChange={(e) => setSelectedBankForConnectionIspb(e.target.value)}
@@ -178,7 +179,7 @@ export function AccountsPage() {
               </option>
             ))}
           </select>
-          {banksDirectory.isLoading ? <p className="mt-2 text-xs text-slate-300/75">Carregando bancos...</p> : null}
+          {banksDirectory.isLoading ? <p className="text-secondary-theme mt-2 text-xs">Carregando bancos...</p> : null}
           {banksDirectory.isError ? (
             <p className="mt-2 text-xs text-rose-300">Não foi possível carregar os bancos externos.</p>
           ) : null}
@@ -204,8 +205,8 @@ export function AccountsPage() {
             </button>
           </div>
 
-        <div className="app-panel p-4">
-          <h3 className="mb-3 text-lg font-semibold text-slate-100">Nova conta</h3>
+        <div className="app-panel p-3 lg:p-2.5 xl:p-3.5">
+          <h3 className="text-primary-theme mb-3 text-lg font-semibold">Nova conta</h3>
           <div className="space-y-3">
             <div className="flex gap-2">
               <select
@@ -246,7 +247,7 @@ export function AccountsPage() {
                     deleteConnection.mutate(selectedConnection)
                   }
                 }}
-                className="rounded-lg border border-rose-300/35 px-3 py-2 text-xs text-rose-200 hover:border-rose-300/60 disabled:opacity-60"
+                className="btn-outline-danger rounded-lg px-3 py-2 text-xs disabled:opacity-60"
               >
                 {deleteConnection.isPending && deletingConnectionId === selectedConnection ? 'Removendo...' : 'Remover'}
               </button>
@@ -282,31 +283,31 @@ export function AccountsPage() {
         </div>
       </section>
 
-      <section className="app-panel p-4">
+      <section className="app-panel p-3 lg:p-2.5 xl:p-3.5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-lg font-semibold text-slate-100">Contas cadastradas</h3>
+          <h3 className="text-primary-theme text-lg font-semibold">Contas cadastradas</h3>
           <button
             type="button"
             onClick={exportAccountsCsv}
-            className="rounded-lg border border-cyan-300/35 px-3 py-1.5 text-xs text-cyan-200 hover:border-cyan-300/60"
+            className="btn-outline-accent rounded-lg px-3 py-1.5 text-xs"
           >
             Exportar CSV
           </button>
         </div>
         {!accounts.data?.length ? (
-          <div className="rounded-lg border border-indigo-300/20 bg-indigo-950/25 px-3 py-2 text-sm text-slate-300/85">
+          <div className="surface-soft text-secondary-theme rounded-lg px-3 py-2 text-sm">
             Você ainda não tem contas cadastradas.
           </div>
         ) : null}
 
         <div className="space-y-2 md:hidden">
           {accounts.data?.map((account) => (
-            <article key={account.id} className="table-line rounded-lg border bg-indigo-950/25 px-3 py-2">
-              <p className="text-sm font-semibold text-slate-100">{account.name}</p>
-              <p className="text-xs text-slate-300/75">Tipo: {account.type}</p>
-              <p className="text-xs text-cyan-200/85">Banco: {account.bankName ?? 'Não informado'}</p>
+            <article key={account.id} className="surface-inner table-line rounded-lg px-3 py-2">
+              <p className="text-primary-theme text-sm font-semibold">{account.name}</p>
+              <p className="text-secondary-theme text-xs">Tipo: {account.type}</p>
+              <p className="text-accent-theme text-xs">Banco: {account.bankName ?? 'Não informado'}</p>
               <div className="mt-1 flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-100">{formatBrl(account.currentBalance)}</p>
+                <p className="text-primary-theme text-sm font-medium">{formatBrl(account.currentBalance)}</p>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -315,7 +316,7 @@ export function AccountsPage() {
                       setEditingAccountName(account.name)
                       setEditingBalance(String(account.currentBalance))
                     }}
-                    className="rounded-md border border-cyan-300/30 px-2 py-1 text-xs text-cyan-200 hover:border-cyan-300/55"
+                    className="btn-outline-accent rounded-md px-2 py-1 text-xs"
                   >
                     Editar
                   </button>
@@ -326,7 +327,7 @@ export function AccountsPage() {
                         deleteAccount.mutate(account.id)
                       }
                     }}
-                    className="rounded-md border border-rose-300/30 px-2 py-1 text-xs text-rose-200 hover:border-rose-300/60"
+                    className="btn-outline-danger rounded-md px-2 py-1 text-xs"
                   >
                     Excluir
                   </button>
@@ -337,9 +338,9 @@ export function AccountsPage() {
         </div>
 
         <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-left text-sm text-slate-200">
+          <table className="text-primary-theme w-full text-left text-sm">
             <thead>
-              <tr className="table-line border-b text-slate-300/75">
+              <tr className="table-line text-secondary-theme border-b">
                 <th className="pb-2">Conta</th>
                 <th className="pb-2">Tipo</th>
                 <th className="pb-2">Banco</th>
@@ -363,7 +364,7 @@ export function AccountsPage() {
                           setEditingAccountName(account.name)
                           setEditingBalance(String(account.currentBalance))
                         }}
-                        className="rounded-md border border-cyan-300/30 px-2.5 py-1 text-xs text-cyan-200 hover:border-cyan-300/55"
+                        className="btn-outline-accent rounded-md px-2.5 py-1 text-xs"
                       >
                         Editar
                       </button>
@@ -374,7 +375,7 @@ export function AccountsPage() {
                             deleteAccount.mutate(account.id)
                           }
                         }}
-                        className="rounded-md border border-rose-300/30 px-2.5 py-1 text-xs text-rose-200 hover:border-rose-300/60"
+                        className="btn-outline-danger rounded-md px-2.5 py-1 text-xs"
                       >
                         Excluir
                       </button>
@@ -387,8 +388,8 @@ export function AccountsPage() {
         </div>
 
         {editingAccountId ? (
-          <div className="mt-4 rounded-lg border border-cyan-300/22 bg-indigo-950/35 p-3">
-            <p className="mb-2 text-sm font-semibold text-slate-100">Editar conta</p>
+          <div className="surface-soft mt-4 rounded-lg p-3">
+            <p className="text-primary-theme mb-2 text-sm font-semibold">Editar conta</p>
             <div className="grid gap-3 md:grid-cols-2">
               <input
                 value={editingAccountName}
@@ -428,7 +429,7 @@ export function AccountsPage() {
               <button
                 type="button"
                 onClick={() => setEditingAccountId('')}
-                className="rounded-lg border border-indigo-300/30 px-4 py-2 text-sm text-slate-200"
+                className="btn-outline text-secondary-theme rounded-lg px-4 py-2 text-sm"
               >
                 Cancelar
               </button>
@@ -436,6 +437,16 @@ export function AccountsPage() {
           </div>
         ) : null}
       </section>
+    </>
+  )
+
+  return (
+    <div className="flex h-full flex-col md:block">
+      <MobileAppFrame title="Contas e Conexões">
+        <div className="space-y-3 [&>header]:hidden [&_.app-panel]:rounded-xl [&_.app-panel]:border [&_.app-panel]:p-3 [&_.table-line]:border [&_h3]:text-[15px] [&_h3]:font-semibold [&_label]:text-slate-200 [&_.app-input]:h-11 [&_.app-input]:rounded-xl [&_.app-select]:h-11 [&_.app-select]:rounded-xl">{pageContent}</div>
+      </MobileAppFrame>
+
+      <div className="hidden space-y-3 lg:space-y-2.5 md:block">{pageContent}</div>
     </div>
   )
 }

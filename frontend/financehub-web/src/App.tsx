@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/app-shell'
 import { AnimatedPage } from './components/ui/animated-page'
 import { PageLoader } from './components/ui/page-loader'
 import { useAuthStore } from './store/auth-store'
+import { useThemeStore } from './store/theme-store'
 
 const LoginPage = lazy(() => import('./pages/login-page').then((module) => ({ default: module.LoginPage })))
 const RegisterPage = lazy(() => import('./pages/register-page').then((module) => ({ default: module.RegisterPage })))
@@ -31,6 +32,15 @@ function PrivateLayout() {
 
 function PublicRoute({ children }: { children: ReactNode }) {
   const token = useAuthStore((state) => state.accessToken)
+
+  useEffect(() => {
+    if (token || typeof document === 'undefined') {
+      return
+    }
+
+    document.documentElement.dataset.theme = 'dark'
+  }, [token])
+
   if (token) {
     return <Navigate to="/dashboard" replace />
   }
@@ -39,6 +49,12 @@ function PublicRoute({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
+  const initializeTheme = useThemeStore((state) => state.initializeTheme)
+
+  useEffect(() => {
+    initializeTheme()
+  }, [initializeTheme])
+
   return (
     <Suspense fallback={<PageLoader label="Preparando experiencia..." fullscreen />}>
       <Routes>

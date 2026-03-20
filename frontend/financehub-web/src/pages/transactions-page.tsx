@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { useMemo, useState } from 'react'
+import { MobileAppFrame } from '../components/layout/mobile-app-frame'
 import { api } from '../lib/api'
 import { downloadCsv } from '../lib/csv'
 import { getApiErrorMessage } from '../lib/http-error'
@@ -240,15 +241,15 @@ export function TransactionsPage() {
     return <p className="text-sm text-rose-300">Não foi possível carregar os dados de transações.</p>
   }
 
-  return (
-    <div className="space-y-6">
+  const pageContent = (
+    <>
       <header>
         <h2 className="app-title text-2xl font-bold">Transações</h2>
         <p className="app-subtitle text-sm">Registre receitas e despesas para alimentar o motor analítico.</p>
       </header>
 
-      <section className="app-panel p-4">
-        <h3 className="mb-3 text-lg font-semibold text-slate-100">Nova transação</h3>
+      <section className="app-panel p-3 lg:p-2.5 xl:p-3.5">
+        <h3 className="text-primary-theme mb-3 text-lg font-semibold">Nova transação</h3>
         <div className="grid gap-3 md:grid-cols-2">
           <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className="app-select">
             <option value="">Selecione a conta</option>
@@ -335,10 +336,10 @@ export function TransactionsPage() {
         </button>
       </section>
 
-      <section className="app-panel p-4">
+      <section className="app-panel p-3 lg:p-2.5 xl:p-3.5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-lg font-semibold text-slate-100">Últimas transações</h3>
-          <button type="button" onClick={exportFilteredTransactions} className="rounded-lg border border-cyan-300/35 px-3 py-1.5 text-xs text-cyan-200 hover:border-cyan-300/60">
+          <h3 className="text-primary-theme text-lg font-semibold">Últimas transações</h3>
+          <button type="button" onClick={exportFilteredTransactions} className="btn-outline-accent rounded-lg px-3 py-1.5 text-xs">
             Exportar CSV
           </button>
         </div>
@@ -383,16 +384,16 @@ export function TransactionsPage() {
         </div>
 
         {!filteredTransactions.length ? (
-          <div className="rounded-lg border border-indigo-300/20 bg-indigo-950/25 px-3 py-2 text-sm text-slate-300/85">
+          <div className="surface-soft text-secondary-theme rounded-lg px-3 py-2 text-sm">
             Nenhuma transação encontrada com os filtros atuais.
           </div>
         ) : null}
         <div className="space-y-2">
           {pagedTransactions.map((transaction) => (
-            <div key={transaction.id} className="table-line flex items-center justify-between rounded-lg border bg-indigo-950/25 px-3 py-2">
+            <div key={transaction.id} className="surface-inner table-line flex items-center justify-between rounded-lg px-3 py-2">
               <div>
-                <p className="font-medium text-slate-100">{transaction.description}</p>
-                <p className="text-xs text-slate-300/75">
+                <p className="text-primary-theme font-medium">{transaction.description}</p>
+                <p className="text-secondary-theme text-xs">
                   {transaction.merchant} • {new Date(transaction.postedAt).toLocaleDateString('pt-BR')}
                 </p>
               </div>
@@ -411,7 +412,7 @@ export function TransactionsPage() {
                     setEditingType(String(transaction.type))
                     setEditingCategoryId(transaction.category?.id ?? '')
                   }}
-                  className="rounded-md border border-cyan-300/30 px-2 py-1 text-xs text-cyan-200 hover:border-cyan-300/60"
+                  className="btn-outline-accent rounded-md px-2 py-1 text-xs"
                 >
                   Editar
                 </button>
@@ -422,7 +423,7 @@ export function TransactionsPage() {
                       deleteTransaction.mutate(transaction.id)
                     }
                   }}
-                  className="rounded-md border border-rose-300/30 px-2 py-1 text-xs text-rose-200 hover:border-rose-300/60"
+                  className="btn-outline-danger rounded-md px-2 py-1 text-xs"
                 >
                   Excluir
                 </button>
@@ -432,7 +433,7 @@ export function TransactionsPage() {
         </div>
 
         {filteredTransactions.length > pageSize ? (
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-300/80">
+          <div className="text-secondary-theme mt-3 flex items-center justify-between text-xs">
             <p>
               Página {currentPage} de {totalPages}
             </p>
@@ -441,7 +442,7 @@ export function TransactionsPage() {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
-                className="rounded-md border border-indigo-300/30 px-2 py-1 disabled:opacity-50"
+                className="btn-outline rounded-md px-2 py-1 disabled:opacity-50"
               >
                 Anterior
               </button>
@@ -449,7 +450,7 @@ export function TransactionsPage() {
                 type="button"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                className="rounded-md border border-indigo-300/30 px-2 py-1 disabled:opacity-50"
+                className="btn-outline rounded-md px-2 py-1 disabled:opacity-50"
               >
                 Próxima
               </button>
@@ -458,8 +459,8 @@ export function TransactionsPage() {
         ) : null}
 
         {editingTransactionId ? (
-          <div className="mt-4 rounded-lg border border-cyan-300/22 bg-indigo-950/35 p-3">
-            <p className="mb-2 text-sm font-semibold text-slate-100">Editar transação</p>
+          <div className="surface-soft mt-4 rounded-lg p-3">
+            <p className="text-primary-theme mb-2 text-sm font-semibold">Editar transação</p>
             <div className="grid gap-3 md:grid-cols-2">
               <input
                 value={editingDescription}
@@ -542,7 +543,7 @@ export function TransactionsPage() {
               <button
                 type="button"
                 onClick={() => setEditingTransactionId('')}
-                className="rounded-lg border border-indigo-300/30 px-4 py-2 text-sm text-slate-200"
+                className="btn-outline text-secondary-theme rounded-lg px-4 py-2 text-sm"
               >
                 Cancelar
               </button>
@@ -550,6 +551,16 @@ export function TransactionsPage() {
           </div>
         ) : null}
       </section>
+    </>
+  )
+
+  return (
+    <div className="flex h-full flex-col md:block">
+      <MobileAppFrame title="Transações">
+        <div className="space-y-3 [&>header]:hidden [&_.app-panel]:rounded-xl [&_.app-panel]:border [&_.app-panel]:p-3 [&_.table-line]:border [&_h3]:text-[15px] [&_h3]:font-semibold [&_label]:text-slate-200 [&_.app-input]:h-11 [&_.app-input]:rounded-xl [&_.app-select]:h-11 [&_.app-select]:rounded-xl">{pageContent}</div>
+      </MobileAppFrame>
+
+      <div className="hidden space-y-3 lg:space-y-2.5 md:block">{pageContent}</div>
     </div>
   )
 }

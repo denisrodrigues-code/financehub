@@ -55,30 +55,23 @@ export function RegisterPage() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[#030717]/78" />
-      <div className="pointer-events-none absolute inset-0 opacity-60" style={{
-        backgroundImage:
-          'radial-gradient(circle at 18% 18%, rgba(56,189,248,0.22) 0%, transparent 35%), radial-gradient(circle at 80% 40%, rgba(99,102,241,0.2) 0%, transparent 38%)',
-      }} />
-      <div className="pointer-events-none absolute inset-0 opacity-25" style={{
-        backgroundImage:
-          'linear-gradient(rgba(66,81,139,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(66,81,139,0.2) 1px, transparent 1px)',
-        backgroundSize: '48px 48px',
-      }} />
+      <div className="auth-backdrop pointer-events-none absolute inset-0" />
+      <div className="auth-orbs pointer-events-none absolute inset-0 opacity-60" />
+      <div className="auth-grid pointer-events-none absolute inset-0 opacity-25" />
 
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="relative w-full max-w-[500px] rounded-[28px] bg-indigo-950/35 px-6 py-9 text-slate-100 shadow-[0_0_10px_rgba(34,211,238,0.14)] backdrop-blur-sm sm:max-w-[530px] sm:px-8 sm:py-10 lg:max-w-[560px] lg:px-10 lg:py-11 lg:shadow-[0_0_20px_rgba(34,211,238,0.2),0_0_24px_rgba(124,58,237,0.12)]"
+        className="auth-card relative w-full max-w-[500px] rounded-[28px] px-6 py-9 text-slate-100 sm:max-w-[530px] sm:px-8 sm:py-10 lg:max-w-[560px] lg:px-10 lg:py-11"
       >
-        <p className="mono text-xs uppercase tracking-[0.2em] text-cyan-300">FinanceHub</p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-100">Criar conta</h1>
-        <p className="mt-1 text-sm text-slate-300/80">Conecte bancos e centralize sua vida financeira.</p>
+        <p className="text-accent-theme mono text-xs uppercase tracking-[0.2em]">FinanceHub</p>
+        <h1 className="text-primary-theme mt-2 text-2xl font-bold">Criar conta</h1>
+        <p className="text-secondary-theme mt-1 text-sm">Conecte bancos e centralize sua vida financeira.</p>
 
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="register-name" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="register-name" className="text-secondary-theme mb-1 block text-sm font-medium">
               Nome
             </label>
             <input id="register-name" {...register('name')} className="app-input" />
@@ -88,7 +81,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="register-email" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="register-email" className="text-secondary-theme mb-1 block text-sm font-medium">
               E-mail
             </label>
             <input id="register-email" {...register('email')} className="app-input" />
@@ -98,7 +91,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="register-password" className="mb-1 block text-sm font-medium text-slate-200">
+            <label htmlFor="register-password" className="text-secondary-theme mb-1 block text-sm font-medium">
               Senha
             </label>
             <input id="register-password" {...register('password')} type="password" className="app-input" />
@@ -116,9 +109,9 @@ export function RegisterPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-300/85">
+        <p className="text-secondary-theme mt-4 text-sm">
           Já possui conta?{' '}
-          <Link to="/login" className="font-semibold text-cyan-300 hover:text-cyan-200">
+          <Link to="/login" className="text-accent-theme font-semibold">
             Entrar
           </Link>
         </p>
