@@ -87,7 +87,7 @@ Ao iniciar a API pela primeira vez, o banco é criado e um usuário demo é seme
 Comando usado para gerar a migration inicial:
 
 ```bash
-dotnet dotnet-ef migrations add InitialCreate \
+dotnet ef migrations add InitialCreate \
   --project backend/src/FinanceHub.Infrastructure/FinanceHub.Infrastructure.csproj \
   --startup-project backend/src/FinanceHub.Api/FinanceHub.Api.csproj \
   --context FinanceHubDbContext \
@@ -97,7 +97,7 @@ dotnet dotnet-ef migrations add InitialCreate \
 Para aplicar no banco:
 
 ```bash
-dotnet dotnet-ef database update \
+dotnet ef database update \
   --project backend/src/FinanceHub.Infrastructure/FinanceHub.Infrastructure.csproj \
   --startup-project backend/src/FinanceHub.Api/FinanceHub.Api.csproj
 ```
