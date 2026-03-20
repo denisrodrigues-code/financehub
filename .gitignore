@@ -19,3 +19,7 @@ obj/
 
 # Local env
 .env
+
+# Local design/export artifacts
+/.tmp-exports/
+/image.png
